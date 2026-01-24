@@ -1,0 +1,15 @@
+[package]
+name = "ittybitty"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+crossterm = "0.29.0"
+chrono = "0.4.43"
+bytes = "1.11.0"
+directories = "6.0.0"
+librqbit = "8.1.1"
+open = "5.3.3"
+ratatui = "0.30.0"
+tokio = "1.49.0"
