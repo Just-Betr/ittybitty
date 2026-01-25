@@ -318,7 +318,7 @@ fn draw_table(frame: &mut Frame, area: Rect, app: &App) {
     };
 
     let header = Row::new(vec![
-        "NAME", "  STATUS", "  PROG%", "  DOWN", "  UP", "  PEERS", "  SIZE", "  RATIO",
+        "NAME", " STATUS", " PROG%", " DOWN", " UP", " PEERS", " SIZE", " RATIO",
     ])
     .style(header_style)
     .height(1);
@@ -351,20 +351,20 @@ fn draw_table(frame: &mut Frame, area: Rect, app: &App) {
         rows,
         vec![
             Constraint::Length(col_widths.get(0).copied().unwrap_or(0) as u16),
-            Constraint::Length(10),
-            Constraint::Length(7),
-            Constraint::Length(10),
-            Constraint::Length(10),
-            Constraint::Length(7),
-            Constraint::Length(8),
-            Constraint::Length(7),
+            Constraint::Length(col_widths.get(1).copied().unwrap_or(0) as u16),
+            Constraint::Length(col_widths.get(2).copied().unwrap_or(0) as u16),
+            Constraint::Length(col_widths.get(3).copied().unwrap_or(0) as u16),
+            Constraint::Length(col_widths.get(4).copied().unwrap_or(0) as u16),
+            Constraint::Length(col_widths.get(5).copied().unwrap_or(0) as u16),
+            Constraint::Length(col_widths.get(6).copied().unwrap_or(0) as u16),
+            Constraint::Length(col_widths.get(7).copied().unwrap_or(0) as u16),
         ],
     )
     .header(header)
     .block(Block::default().style(row_style))
     .highlight_symbol("")
     .row_highlight_style(match app.focus() {
-        FocusPanel::Torrents => Style::default().bg(Color::Rgb(8, 10, 8)),
+        FocusPanel::Torrents => Style::default().bg(Color::Rgb(0, 30, 0)),
         FocusPanel::Filters => Style::default().bg(Color::Rgb(0, 60, 0)),
     })
     .column_spacing(0);
@@ -824,13 +824,13 @@ fn torrent_row(t: &TorrentRow, col_widths: &[usize]) -> Row<'static> {
     let ratio_width = col_widths.get(7).copied().unwrap_or(0);
 
     let name_text = fit_text(&t.name, name_width);
-    let status = fit_text_padded(&status, status_width, 2);
-    let prog = fit_text_padded(&prog, prog_width, 2);
-    let down = fit_text_padded(&down, down_width, 2);
-    let up = fit_text_padded(&up, up_width, 2);
-    let peers = fit_text_padded(&peers, peers_width, 2);
-    let size = fit_text_padded(&size, size_width, 2);
-    let ratio = fit_text_padded(&ratio, ratio_width, 2);
+    let status = fit_text_padded(&status, status_width, 1);
+    let prog = fit_text_padded(&prog, prog_width, 1);
+    let down = fit_text_padded(&down, down_width, 1);
+    let up = fit_text_padded(&up, up_width, 1);
+    let peers = fit_text_padded(&peers, peers_width, 1);
+    let size = fit_text_padded(&size, size_width, 1);
+    let ratio = fit_text_padded(&ratio, ratio_width, 1);
 
     let name_cell = Text::from(vec![
         Line::from(Span::styled(
@@ -929,13 +929,13 @@ fn torrent_row(t: &TorrentRow, col_widths: &[usize]) -> Row<'static> {
     .height(2)
 }
 
-fn table_column_widths(area_width: u16, columns: usize) -> Vec<usize> {
-    let spacing = if columns > 1 { columns - 1 } else { 0 };
-    let fixed = 10 + 7 + 10 + 10 + 7 + 8 + 7;
+fn table_column_widths(area_width: u16, _columns: usize) -> Vec<usize> {
+    let spacing = 0;
+    let fixed = 14 + 12 + 17 + 17 + 13 + 14 + 12;
     let available = area_width.saturating_sub(spacing as u16);
     let remaining = available.saturating_sub(fixed as u16);
     let first = remaining as usize;
-    vec![first, 10, 7, 10, 10, 7, 8, 7]
+    vec![first, 14, 12, 17, 17, 13, 14, 12]
 }
 
 fn progress_filled(t: &TorrentRow, width: usize) -> usize {

@@ -40,6 +40,7 @@ pub enum Action {
     FilePickerConfirm,
     FilePickerCancel,
     Refresh,
+    PreflightAddResult { magnet: String },
     RunEffect(super::effect::Effect),
 }
 

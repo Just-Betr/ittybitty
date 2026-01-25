@@ -1,4 +1,6 @@
-# ittybitty
+ï»¿# IttyBitty
+
+![IttyBitty UI](ittybitty.png)
 
 A cross-platform, terminal-based BitTorrent client written in Rust. Built on `ratatui` (TUI) and `librqbit` (BitTorrent engine).
 
@@ -16,11 +18,9 @@ A cross-platform, terminal-based BitTorrent client written in Rust. Built on `ra
 - Rust (stable)
 - Cargo
 
-## Build and run
+## Run it by
 
 ```bash
-git clone <your-repo-url>
-cd ittybitty
 cargo run
 ```
 
@@ -65,8 +65,9 @@ Paste is accepted only inside the add/dir dialogs to avoid accidental commands i
 
 ## Contributing
 
-Open source — contributions are highly appreciated. Feel free to open issues or pull requests.
+Open source - contributions are highly appreciated. Feel free to open issues or pull requests.
 
 ## License
 
 BSD 3-Clause License. See `LICENSE`.
+

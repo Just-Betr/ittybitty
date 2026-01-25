@@ -4,6 +4,9 @@ pub enum Effect {
     TogglePause,
     StopSelected,
     DeleteSelectedFiles,
+    PreflightAdd {
+        magnet: String,
+    },
     StartFilePicker { magnet: String, output_folder: String },
     StartDownload {
         magnet: String,

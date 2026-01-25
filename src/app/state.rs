@@ -229,6 +229,7 @@ impl App {
         self.last_error = Some(err.to_string());
         self.status = "Error".to_string();
         self.mode = Mode::Normal;
+        self.view = View::Torrents;
         self.file_picker = None;
         self.confirm_delete = false;
         self.confirm_quit = false;
@@ -244,6 +245,7 @@ impl App {
     pub fn clear_error(&mut self) {
         self.last_error = None;
         self.status = "Ready".to_string();
+        self.view = View::Torrents;
         self.dialog = Dialog::None;
     }
 
@@ -258,6 +260,15 @@ impl App {
                 .map(|h| h == info_hash)
                 .unwrap_or(false)
                 && t.output_folder == output_folder
+        })
+    }
+
+    pub fn has_info_hash(&self, info_hash: &str) -> bool {
+        self.torrents.iter().any(|t| {
+            t.info_hash
+                .as_ref()
+                .map(|h| h == info_hash)
+                .unwrap_or(false)
         })
     }
 

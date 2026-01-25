@@ -178,18 +178,15 @@ impl App {
                 match self.mode {
                     Mode::EnterMagnet => {
                         if value.is_empty() {
-                            self.status = "Magnet cannot be empty".to_string();
-                            self.last_error = Some("Empty magnet".to_string());
+                            self.set_error("Magnet cannot be empty");
                         } else if let Err(err) = super::util::build_add_torrent(&value) {
-                            self.status = "Invalid torrent input".to_string();
-                            self.last_error = Some(err.to_string());
+                            self.set_error(err);
                         } else {
-                            self.pending_add_input = Some(value);
-                            self.mode = Mode::EnterTorrentDir;
-                            self.input = self.download_dir.to_string_lossy().into_owned();
-                            self.input_cursor = self.input.chars().count();
-                            self.status = "Set download dir for this torrent".to_string();
-                            self.dialog = Dialog::AddTorrent;
+                            self.status = "Checking torrent...".to_string();
+                            self.dialog = Dialog::None;
+                            queue.push_back(Action::RunEffect(Effect::PreflightAdd {
+                                magnet: value,
+                            }));
                         }
                     }
                     Mode::EnterTorrentDir => {
@@ -301,6 +298,14 @@ impl App {
                 for action in next {
                     queue.push_back(action);
                 }
+            }
+            Action::PreflightAddResult { magnet } => {
+                self.pending_add_input = Some(magnet);
+                self.mode = Mode::EnterTorrentDir;
+                self.input = self.download_dir.to_string_lossy().into_owned();
+                self.input_cursor = self.input.chars().count();
+                self.status = "Set download dir for this torrent".to_string();
+                self.dialog = Dialog::AddTorrent;
             }
         }
         Ok(None)

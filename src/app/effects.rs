@@ -26,6 +26,10 @@ impl App {
             Effect::DeleteSelectedFiles => {
                 self.delete_selected_files().await?;
             }
+            Effect::PreflightAdd { magnet } => {
+                let next = self.preflight_add(magnet).await?;
+                return Ok(next);
+            }
             Effect::StartFilePicker {
                 magnet,
                 output_folder,
@@ -46,6 +50,35 @@ impl App {
             }
         }
         Ok(Vec::new())
+    }
+
+    async fn preflight_add(&mut self, magnet: String) -> Result<Vec<Action>> {
+        let add = build_add_torrent(&magnet)?;
+        let response = self
+            .api
+            .api_add_torrent(
+                add,
+                Some(AddTorrentOptions {
+                    list_only: true,
+                    output_folder: Some(self.download_dir.to_string_lossy().into_owned()),
+                    ..Default::default()
+                }),
+            )
+            .await
+            .context("error listing files")?;
+        let info_hash = response.details.info_hash.as_str();
+        let existing = self
+            .api
+            .api_torrent_list_ext(ApiTorrentListOpts { with_stats: false })
+            .torrents
+            .iter()
+            .any(|t| t.info_hash == info_hash);
+        if existing {
+            return Err(anyhow!(
+                "Torrent already added; duplicate locations are not supported"
+            ));
+        }
+        Ok(vec![Action::PreflightAddResult { magnet }])
     }
 
     pub fn refresh(&mut self) {
@@ -112,14 +145,21 @@ impl App {
         };
         let info_hash = response.details.info_hash.as_str();
         let suffix = derive_folder_suffix(&response);
-        let final_output = PathBuf::from(&output_folder).join(sanitize_path_component(&suffix));
+        let base = PathBuf::from(&output_folder);
+        let mut folder_name = sanitize_path_component(&suffix);
+        let mut final_output = base.join(&folder_name);
         if self.has_same_destination(info_hash, final_output.to_string_lossy().as_ref()) {
             return Err(anyhow!(
                 "Torrent already added for this download directory"
             ));
         }
         if final_output.exists() {
-            return Err(anyhow!("Destination folder already exists"));
+            let short_hash: String = info_hash.chars().take(8).collect();
+            folder_name = format!("{folder_name}-{short_hash}");
+            final_output = base.join(&folder_name);
+            if final_output.exists() {
+                return Err(anyhow!("Destination folder already exists"));
+            }
         }
         std::fs::create_dir_all(&final_output).context("failed to create download folder")?;
         let output_folder = final_output.to_string_lossy().into_owned();
