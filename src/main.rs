@@ -1,20 +1,12 @@
-mod app;
-mod ui;
-
 use std::{io, path::PathBuf, time::Duration};
 
 use anyhow::{Context, Result};
-use crossterm::{
-    event::{DisableBracketedPaste, EnableBracketedPaste},
-    execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
-};
 use directories::UserDirs;
 use librqbit::{Api, Session, SessionOptions, SessionPersistenceConfig};
 use ratatui::{Terminal, backend::CrosstermBackend};
 use tokio::select;
 
-use crate::app::{App, start_event_thread};
+use ittybitty::{app::App, events::start_event_thread, tui};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -34,7 +26,7 @@ async fn main() -> Result<()> {
     let mut app = App::new(api, download_dir);
     app.refresh();
 
-    setup_terminal()?;
+    tui::setup_terminal()?;
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
 
     let mut events = start_event_thread();
@@ -43,7 +35,7 @@ async fn main() -> Result<()> {
     let mut should_quit = false;
 
     while !should_quit {
-        terminal.draw(|frame| ui::draw(frame, &app))?;
+        terminal.draw(|frame| ittybitty::ui::draw(frame, &app))?;
 
         select! {
             _ = tick.tick() => {
@@ -58,21 +50,7 @@ async fn main() -> Result<()> {
         }
     }
 
-    restore_terminal()?;
-    Ok(())
-}
-
-fn setup_terminal() -> Result<()> {
-    enable_raw_mode().context("failed to enable raw mode")?;
-    execute!(io::stdout(), EnterAlternateScreen, EnableBracketedPaste)
-        .context("failed to enter alt screen")?;
-    Ok(())
-}
-
-fn restore_terminal() -> Result<()> {
-    disable_raw_mode().context("failed to disable raw mode")?;
-    execute!(io::stdout(), DisableBracketedPaste, LeaveAlternateScreen)
-        .context("failed to leave alt screen")?;
+    tui::restore_terminal()?;
     Ok(())
 }
 

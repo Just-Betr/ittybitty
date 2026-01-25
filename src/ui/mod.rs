@@ -1,4 +1,3 @@
-use chrono::Local;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -9,11 +8,11 @@ use ratatui::{
 
 use crate::app::{App, FilePickerState, FocusPanel, Mode, TorrentRow, View};
 
-const COLOR_BG: Color = Color::Rgb(18, 20, 18);
-const COLOR_PANEL: Color = Color::Rgb(22, 24, 22);
-const COLOR_GREEN: Color = Color::Rgb(0, 220, 120);
-const COLOR_BORDER: Color = Color::Rgb(0, 180, 90);
-const COLOR_FOCUS_BG: Color = Color::Rgb(10, 12, 10);
+const COLOR_BG: Color = Color::Rgb(14, 16, 14);
+const COLOR_PANEL: Color = Color::Rgb(20, 22, 20);
+const COLOR_GREEN: Color = Color::Rgb(0, 245, 150);
+const COLOR_BORDER: Color = Color::Rgb(0, 205, 110);
+const COLOR_FOCUS_BG: Color = Color::Rgb(6, 8, 6);
 const COLOR_CYAN: Color = Color::Rgb(0, 255, 255);
 const COLOR_YELLOW: Color = Color::Rgb(255, 255, 0);
 const COLOR_MUTED: Color = Color::Rgb(136, 136, 136);
@@ -27,9 +26,8 @@ pub fn draw(frame: &mut Frame, app: &App) {
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(2),
-            Constraint::Min(10),
             Constraint::Length(1),
+            Constraint::Min(10),
         ])
         .split(area);
 
@@ -61,7 +59,6 @@ pub fn draw(frame: &mut Frame, app: &App) {
         draw_error_modal(frame, err);
     }
 
-    draw_bottom_bar(frame, layout[2], app);
 }
 
 fn draw_top_bar(frame: &mut Frame, area: Rect) {
@@ -321,7 +318,7 @@ fn draw_table(frame: &mut Frame, area: Rect, app: &App) {
     };
 
     let header = Row::new(vec![
-        "NAME", "STATUS", "PROG%", "DOWN", "UP", "PEERS", "SIZE", "RATIO",
+        "NAME", "  STATUS", "  PROG%", "  DOWN", "  UP", "  PEERS", "  SIZE", "  RATIO",
     ])
     .style(header_style)
     .height(1);
@@ -335,13 +332,13 @@ fn draw_table(frame: &mut Frame, area: Rect, app: &App) {
     let rows: Vec<Row> = if filtered.is_empty() {
         vec![Row::new(vec![
             Cell::from(Text::from("No torrents in this filter")),
-            Cell::from(Text::from("")),
-            Cell::from(Text::from("")),
-            Cell::from(Text::from("")),
-            Cell::from(Text::from("")),
-            Cell::from(Text::from("")),
-            Cell::from(Text::from("")),
-            Cell::from(Text::from("")),
+            Cell::from(Text::from(" ")),
+            Cell::from(Text::from(" ")),
+            Cell::from(Text::from(" ")),
+            Cell::from(Text::from(" ")),
+            Cell::from(Text::from(" ")),
+            Cell::from(Text::from(" ")),
+            Cell::from(Text::from(" ")),
         ])]
     } else {
         filtered
@@ -360,17 +357,17 @@ fn draw_table(frame: &mut Frame, area: Rect, app: &App) {
             Constraint::Length(10),
             Constraint::Length(7),
             Constraint::Length(8),
-            Constraint::Length(6),
+            Constraint::Length(7),
         ],
     )
     .header(header)
     .block(Block::default().style(row_style))
     .highlight_symbol("")
     .row_highlight_style(match app.focus() {
-        FocusPanel::Torrents => Style::default().bg(Color::Rgb(20, 28, 20)),
-        FocusPanel::Filters => Style::default().bg(Color::Rgb(0, 70, 0)),
+        FocusPanel::Torrents => Style::default().bg(Color::Rgb(8, 10, 8)),
+        FocusPanel::Filters => Style::default().bg(Color::Rgb(0, 60, 0)),
     })
-    .column_spacing(1);
+    .column_spacing(0);
 
     let mut state = TableState::default();
     if !filtered.is_empty() {
@@ -488,31 +485,6 @@ fn draw_selected_panel(frame: &mut Frame, area: Rect, app: &App) {
     frame.render_widget(Paragraph::new(line3), cols[2]);
 }
 
-fn draw_bottom_bar(frame: &mut Frame, area: Rect, _app: &App) {
-    let block = Block::default().style(Style::default().bg(COLOR_GREEN).fg(COLOR_BLACK));
-    frame.render_widget(block, area);
-
-    let left = Line::from("");
-    let center = Line::from("IttyBitty daemon: RUNNING | DHT: N/A | Port: N/A");
-    let right = Line::from(Local::now().format("%I:%M:%S %p").to_string());
-
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(30),
-            Constraint::Percentage(40),
-            Constraint::Percentage(30),
-        ])
-        .split(area);
-
-    frame.render_widget(Paragraph::new(left).alignment(Alignment::Left), chunks[0]);
-    frame.render_widget(
-        Paragraph::new(center).alignment(Alignment::Center),
-        chunks[1],
-    );
-    frame.render_widget(Paragraph::new(right).alignment(Alignment::Right), chunks[2]);
-}
-
 fn draw_input_modal(frame: &mut Frame, app: &App) {
     let area = centered_rect(70, 20, frame.area());
     frame.render_widget(Clear, area);
@@ -597,19 +569,46 @@ fn draw_error_modal(frame: &mut Frame, message: &str) {
         .style(Style::default().bg(COLOR_BG))
         .title(Span::styled("Error", Style::default().fg(Color::Red)));
 
-    let text = Text::from(vec![
+    let mut lines = vec![
         Line::from(Span::styled(
             "An error occurred",
             Style::default().fg(Color::Red),
         )),
         Line::from(""),
-        Line::from(Span::styled(message, Style::default().fg(Color::White))),
-        Line::from(""),
-        Line::from(Span::styled(
-            "Press x to dismiss",
-            Style::default().fg(COLOR_MUTED),
-        )),
-    ]);
+    ];
+    if let Some((head, tail)) = message.split_once("Caused by:") {
+        let head = head.trim();
+        if !head.is_empty() {
+            lines.push(Line::from(Span::styled(
+                head,
+                Style::default().fg(Color::White),
+            )));
+            lines.push(Line::from(""));
+        }
+        lines.push(Line::from(Span::styled(
+            "Caused by:",
+            Style::default().fg(Color::Red),
+        )));
+        let tail = tail.trim();
+        if !tail.is_empty() {
+            lines.push(Line::from(Span::styled(
+                tail,
+                Style::default().fg(Color::White),
+            )));
+        }
+    } else {
+        lines.push(Line::from(Span::styled(
+            message,
+            Style::default().fg(Color::White),
+        )));
+    }
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        "Press x to dismiss",
+        Style::default().fg(COLOR_MUTED),
+    )));
+
+    let text = Text::from(lines);
 
     let paragraph = Paragraph::new(text).block(block).alignment(Alignment::Left);
     frame.render_widget(paragraph, area);
@@ -799,8 +798,15 @@ fn draw_confirm_quit(frame: &mut Frame, app: &App) {
 fn torrent_row(t: &TorrentRow, col_widths: &[usize]) -> Row<'static> {
     let (status, status_color) = format_status(t);
     let (prog, down, up, peers, size, ratio) = format_metrics(t);
-    let spacing = 1usize;
+    let spacing = 0usize;
     let gap_style = Style::default().fg(COLOR_GREEN);
+    let status = format!("  {status}");
+    let prog = format!("  {prog}");
+    let down = format!("  {down}");
+    let up = format!("  {up}");
+    let peers = format!("  {peers}");
+    let size = format!("  {size}");
+    let ratio = format!("  {ratio}");
     let bar_len: usize = col_widths
         .iter()
         .sum::<usize>()
@@ -808,9 +814,27 @@ fn torrent_row(t: &TorrentRow, col_widths: &[usize]) -> Row<'static> {
         .max(1);
     let filled = progress_filled(t, bar_len);
 
+    let name_width = col_widths.get(0).copied().unwrap_or(0);
+    let status_width = col_widths.get(1).copied().unwrap_or(0);
+    let prog_width = col_widths.get(2).copied().unwrap_or(0);
+    let down_width = col_widths.get(3).copied().unwrap_or(0);
+    let up_width = col_widths.get(4).copied().unwrap_or(0);
+    let peers_width = col_widths.get(5).copied().unwrap_or(0);
+    let size_width = col_widths.get(6).copied().unwrap_or(0);
+    let ratio_width = col_widths.get(7).copied().unwrap_or(0);
+
+    let name_text = fit_text(&t.name, name_width);
+    let status = fit_text(&status, status_width);
+    let prog = fit_text(&prog, prog_width);
+    let down = fit_text(&down, down_width);
+    let up = fit_text(&up, up_width);
+    let peers = fit_text(&peers, peers_width);
+    let size = fit_text(&size, size_width);
+    let ratio = fit_text(&ratio, ratio_width);
+
     let name_cell = Text::from(vec![
         Line::from(Span::styled(
-            truncate(&t.name, 40),
+            name_text,
             Style::default().fg(COLOR_GREEN),
         )),
         bar_segment(
@@ -907,11 +931,11 @@ fn torrent_row(t: &TorrentRow, col_widths: &[usize]) -> Row<'static> {
 
 fn table_column_widths(area_width: u16, columns: usize) -> Vec<usize> {
     let spacing = if columns > 1 { columns - 1 } else { 0 };
-    let fixed = 10 + 7 + 10 + 10 + 7 + 8 + 6;
+    let fixed = 10 + 7 + 10 + 10 + 7 + 8 + 7;
     let available = area_width.saturating_sub(spacing as u16);
     let remaining = available.saturating_sub(fixed as u16);
     let first = remaining as usize;
-    vec![first, 10, 7, 10, 10, 7, 8, 6]
+    vec![first, 10, 7, 10, 10, 7, 8, 7]
 }
 
 fn progress_filled(t: &TorrentRow, width: usize) -> usize {
@@ -1132,11 +1156,18 @@ fn format_bytes(bytes: u64) -> String {
     }
 }
 
-fn truncate(s: &str, max: usize) -> String {
-    if s.len() <= max {
+fn fit_text(s: &str, width: usize) -> String {
+    if width == 0 {
+        return String::new();
+    }
+    let count = s.chars().count();
+    if count <= width {
         return s.to_string();
     }
-    let mut out = s.chars().take(max - 3).collect::<String>();
+    if width <= 3 {
+        return ".".repeat(width);
+    }
+    let mut out = s.chars().take(width - 3).collect::<String>();
     out.push_str("...");
     out
 }
