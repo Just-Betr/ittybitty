@@ -157,10 +157,13 @@ impl App {
         if let Some(id) = response.id {
             if !only_files.is_empty() {
                 let set: HashSet<usize> = only_files.iter().copied().collect();
-                self.api
+                if let Err(err) = self
+                    .api
                     .api_torrent_action_update_only_files(id.into(), &set)
                     .await
-                    .context("error applying file selection")?;
+                {
+                    self.status = format!("File selection warning: {err}");
+                }
             }
         }
         self.status = "Torrent added".to_string();
@@ -220,3 +223,4 @@ impl App {
         Ok(())
     }
 }
+

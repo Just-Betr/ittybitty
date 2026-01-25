@@ -82,29 +82,29 @@ pub struct FilePickerState {
 }
 
 pub struct App {
-    pub(crate) api: Api,
-    pub(crate) torrents: Vec<TorrentRow>,
-    pub(crate) selected: usize,
-    pub(crate) mode: Mode,
-    pub(crate) input: String,
-    pub(crate) input_cursor: usize,
-    pub(crate) last_char_at: Option<Instant>,
-    pub(crate) download_dir: PathBuf,
-    pub(crate) status: String,
-    pub(crate) last_error: Option<String>,
-    pub(crate) file_picker: Option<FilePickerState>,
-    pub(crate) session_stats: Option<SessionStatsSnapshot>,
-    pub(crate) view: View,
-    pub(crate) confirm_delete: bool,
-    pub(crate) delete_choice: bool,
-    pub(crate) confirm_quit: bool,
-    pub(crate) quit_choice: bool,
-    pub(crate) focus: FocusPanel,
-    pub(crate) filter_index: usize,
-    pub(crate) pending_add_input: Option<String>,
-    pub(crate) show_help: bool,
-    pub(crate) help_scroll: u16,
-    pub(crate) dialog: Dialog,
+    pub api: Api,
+    pub torrents: Vec<TorrentRow>,
+    pub selected: usize,
+    pub mode: Mode,
+    pub input: String,
+    pub input_cursor: usize,
+    pub last_char_at: Option<Instant>,
+    pub download_dir: PathBuf,
+    pub status: String,
+    pub last_error: Option<String>,
+    pub file_picker: Option<FilePickerState>,
+    pub session_stats: Option<SessionStatsSnapshot>,
+    pub view: View,
+    pub confirm_delete: bool,
+    pub delete_choice: bool,
+    pub confirm_quit: bool,
+    pub quit_choice: bool,
+    pub focus: FocusPanel,
+    pub filter_index: usize,
+    pub pending_add_input: Option<String>,
+    pub show_help: bool,
+    pub help_scroll: u16,
+    pub dialog: Dialog,
 }
 
 impl App {
@@ -251,7 +251,7 @@ impl App {
         self.last_error.as_deref()
     }
 
-    pub(crate) fn has_same_destination(&self, info_hash: &str, output_folder: &str) -> bool {
+    pub fn has_same_destination(&self, info_hash: &str, output_folder: &str) -> bool {
         self.torrents.iter().any(|t| {
             t.info_hash
                 .as_ref()
@@ -261,7 +261,7 @@ impl App {
         })
     }
 
-    pub(crate) fn should_ignore_paste_char(&mut self) -> bool {
+    pub fn should_ignore_paste_char(&mut self) -> bool {
         if self.dialog != Dialog::None {
             return false;
         }
@@ -277,13 +277,13 @@ impl App {
         false
     }
 
-    pub(crate) fn insert_char(&mut self, c: char) {
+    pub fn insert_char(&mut self, c: char) {
         let idx = super::util::cursor_to_byte_index(&self.input, self.input_cursor);
         self.input.insert(idx, c);
         self.input_cursor += 1;
     }
 
-    pub(crate) fn backspace(&mut self) {
+    pub fn backspace(&mut self) {
         if self.input_cursor == 0 {
             return;
         }
@@ -293,7 +293,7 @@ impl App {
         self.input_cursor -= 1;
     }
 
-    pub(crate) fn delete(&mut self) {
+    pub fn delete(&mut self) {
         let len = self.input.chars().count();
         if self.input_cursor >= len {
             return;
@@ -303,16 +303,16 @@ impl App {
         self.input.replace_range(start..end, "");
     }
 
-    pub(crate) fn move_cursor_left(&mut self) {
+    pub fn move_cursor_left(&mut self) {
         self.input_cursor = self.input_cursor.saturating_sub(1);
     }
 
-    pub(crate) fn move_cursor_right(&mut self) {
+    pub fn move_cursor_right(&mut self) {
         let len = self.input.chars().count();
         self.input_cursor = (self.input_cursor + 1).min(len);
     }
 
-    pub(crate) fn filter_match(&self, t: &TorrentRow) -> bool {
+    pub fn filter_match(&self, t: &TorrentRow) -> bool {
         use FilterKind::*;
         let Some(stats) = t.stats.as_ref() else {
             return matches!(self.selected_filter(), All | Stopped);
@@ -333,7 +333,7 @@ impl App {
         }
     }
 
-    pub(crate) fn ensure_selection_for_filter(&mut self) {
+    pub fn ensure_selection_for_filter(&mut self) {
         if self.torrents.is_empty() {
             self.selected = 0;
             return;
@@ -354,7 +354,7 @@ impl App {
         }
     }
 
-    pub(crate) fn move_selection(&mut self, delta: isize) {
+    pub fn move_selection(&mut self, delta: isize) {
         let indices = self.filtered_indices();
         if indices.is_empty() {
             return;
@@ -367,3 +367,4 @@ impl App {
         self.selected = indices[next_pos];
     }
 }
+

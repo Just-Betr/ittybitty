@@ -19,7 +19,8 @@ A cross-platform, terminal-based BitTorrent client written in Rust. Built on `ra
 ## Build and run
 
 ```bash
-cd ~/work/ittybitty
+git clone <your-repo-url>
+cd ittybitty
 cargo run
 ```
 
@@ -36,13 +37,11 @@ Main
 
 Help scroll
 - Up/Down (or k/j)
-- PageUp/PageDown
-- Home / End
 - ? / x / Esc to close
 
 Confirm dialogs
 - [Y]es / [N]o selects
-- Left/Right selects
+- Left/Right selects (h/l also work)
 - Enter confirms
 - Esc cancels
 
@@ -57,13 +56,17 @@ Confirm dialogs
 
 ## Paste behavior
 
-Paste is disabled in normal mode to avoid accidental commands. Pasting is only accepted in the magnet/dir input dialogs.
+Paste is accepted only inside the add/dir dialogs to avoid accidental commands in the main UI.
 
 ## Notes
 
 - Duplicate handling: the same torrent (info-hash) can be added to different base paths; adding to the same path is an error.
 - This is an early preview; expect UI/UX to evolve.
 
+## Contributing
+
+Open source — contributions are highly appreciated. Feel free to open issues or pull requests.
+
 ## License
 
-Open source. Add a `LICENSE` file (MIT/Apache-2.0/etc.) if you plan to publish.
+BSD 3-Clause License. See `LICENSE`.

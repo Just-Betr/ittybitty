@@ -7,3 +7,4 @@ mod effects;
 mod util;
 
 pub use state::{App, FileEntry, FilePickerState, FilterKind, FocusPanel, Mode, TorrentRow, View};
+

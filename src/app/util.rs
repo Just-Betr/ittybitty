@@ -106,3 +106,4 @@ pub fn cursor_to_byte_index(s: &str, cursor: usize) -> usize {
     }
     s.len()
 }
+

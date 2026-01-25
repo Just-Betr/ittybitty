@@ -42,3 +42,4 @@ pub enum Action {
     Refresh,
     RunEffect(super::effect::Effect),
 }
+

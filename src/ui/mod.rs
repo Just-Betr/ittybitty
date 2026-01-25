@@ -824,13 +824,13 @@ fn torrent_row(t: &TorrentRow, col_widths: &[usize]) -> Row<'static> {
     let ratio_width = col_widths.get(7).copied().unwrap_or(0);
 
     let name_text = fit_text(&t.name, name_width);
-    let status = fit_text(&status, status_width);
-    let prog = fit_text(&prog, prog_width);
-    let down = fit_text(&down, down_width);
-    let up = fit_text(&up, up_width);
-    let peers = fit_text(&peers, peers_width);
-    let size = fit_text(&size, size_width);
-    let ratio = fit_text(&ratio, ratio_width);
+    let status = fit_text_padded(&status, status_width, 2);
+    let prog = fit_text_padded(&prog, prog_width, 2);
+    let down = fit_text_padded(&down, down_width, 2);
+    let up = fit_text_padded(&up, up_width, 2);
+    let peers = fit_text_padded(&peers, peers_width, 2);
+    let size = fit_text_padded(&size, size_width, 2);
+    let ratio = fit_text_padded(&ratio, ratio_width, 2);
 
     let name_cell = Text::from(vec![
         Line::from(Span::styled(
@@ -1170,6 +1170,16 @@ fn fit_text(s: &str, width: usize) -> String {
     let mut out = s.chars().take(width - 3).collect::<String>();
     out.push_str("...");
     out
+}
+
+fn fit_text_padded(s: &str, width: usize, pad: usize) -> String {
+    if width == 0 {
+        return String::new();
+    }
+    let pad = pad.min(width);
+    let inner = width.saturating_sub(pad);
+    let trimmed = fit_text(s, inner);
+    format!("{}{}", " ".repeat(pad), trimmed)
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
