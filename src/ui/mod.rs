@@ -17,6 +17,7 @@ const COLOR_CYAN: Color = Color::Rgb(0, 255, 255);
 const COLOR_YELLOW: Color = Color::Rgb(255, 255, 0);
 const COLOR_MUTED: Color = Color::Rgb(136, 136, 136);
 const COLOR_BLACK: Color = Color::Rgb(0, 0, 0);
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn draw(frame: &mut Frame, app: &App) {
     let area = frame.area();
@@ -65,7 +66,9 @@ fn draw_top_bar(frame: &mut Frame, area: Rect) {
     let block = Block::default().style(Style::default().bg(COLOR_GREEN).fg(COLOR_BLACK));
     frame.render_widget(block, area);
 
-    let left = Line::from("IttyBitty - BitTorrent Client v0.1.0");
+    let left = Line::from(format!(
+        "IttyBitty - BitTorrent Client v{APP_VERSION}"
+    ));
     let right = Line::from("[q: Quit] [?: Help]");
 
     let chunks = Layout::default()
@@ -930,12 +933,30 @@ fn torrent_row(t: &TorrentRow, col_widths: &[usize]) -> Row<'static> {
 }
 
 fn table_column_widths(area_width: u16, _columns: usize) -> Vec<usize> {
-    let spacing = 0;
-    let fixed = 14 + 12 + 17 + 17 + 13 + 14 + 12;
-    let available = area_width.saturating_sub(spacing as u16);
-    let remaining = available.saturating_sub(fixed as u16);
-    let first = remaining as usize;
-    vec![first, 14, 12, 17, 17, 13, 14, 12]
+    let available = area_width as usize;
+    let min_name = 24;
+    let mut cols = vec![0, 10, 8, 15, 13, 9, 10, 8];
+    let mut fixed: usize = cols.iter().skip(1).sum();
+    let mut name = available.saturating_sub(fixed);
+    if name < min_name {
+        let mins = [0, 8, 7, 10, 10, 7, 8, 7];
+        let mut deficit = min_name.saturating_sub(name);
+        for idx in (1..cols.len()).rev() {
+            if deficit == 0 {
+                break;
+            }
+            let min = mins[idx];
+            if cols[idx] > min {
+                let take = (cols[idx] - min).min(deficit);
+                cols[idx] -= take;
+                fixed -= take;
+                deficit -= take;
+            }
+        }
+        name = available.saturating_sub(fixed);
+    }
+    cols[0] = name;
+    cols
 }
 
 fn progress_filled(t: &TorrentRow, width: usize) -> usize {
@@ -1241,4 +1262,3 @@ fn visible_input(input: &str, cursor: usize, area_width: u16) -> (String, Option
     let cursor_x = (cursor_offset as u16).min(content_width as u16);
     (visible, Some(cursor_x + 1))
 }
-

@@ -177,13 +177,18 @@ impl App {
         output_folder: String,
         only_files: Vec<usize>,
     ) -> Result<()> {
+        if only_files.is_empty() {
+            return Err(anyhow!("No files selected"));
+        }
+        let expected: HashSet<usize> = only_files.iter().copied().collect();
         let add = build_add_torrent(&magnet)?;
         let response = self
             .api
             .api_add_torrent(
                 add,
                 Some(AddTorrentOptions {
-                    only_files: Some(only_files.clone()),
+                    paused: true,
+                    only_files: Some(only_files),
                     output_folder: Some(output_folder),
                     overwrite: true,
                     ..Default::default()
@@ -195,16 +200,28 @@ impl App {
             return Err(anyhow!("torrent was not added"));
         }
         if let Some(id) = response.id {
-            if !only_files.is_empty() {
-                let set: HashSet<usize> = only_files.iter().copied().collect();
-                if let Err(err) = self
-                    .api
-                    .api_torrent_action_update_only_files(id.into(), &set)
-                    .await
-                {
-                    self.status = format!("File selection warning: {err}");
-                }
+            let details = self
+                .api
+                .api_torrent_details(id.into())
+                .context("error verifying file selection")?;
+            let files = details
+                .files
+                .ok_or_else(|| anyhow!("torrent details missing files"))?;
+            let actual: HashSet<usize> = files
+                .into_iter()
+                .enumerate()
+                .filter_map(|(idx, file)| if file.included { Some(idx) } else { None })
+                .collect();
+            if actual != expected {
+                let _ = self.api.api_torrent_action_delete(id.into()).await;
+                return Err(anyhow!(
+                    "File selection was not honored; torrent was removed"
+                ));
             }
+            self.api
+                .api_torrent_action_start(id.into())
+                .await
+                .context("error starting torrent")?;
         }
         self.status = "Torrent added".to_string();
         Ok(())
@@ -263,4 +280,3 @@ impl App {
         Ok(())
     }
 }
-
